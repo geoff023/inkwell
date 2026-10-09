@@ -11,8 +11,20 @@ const SUPABASE_STUB = `
   create schema auth;
   create table auth.users (
     id uuid primary key default gen_random_uuid(),
+    instance_id uuid,
+    aud text,
+    role text,
     email text,
-    raw_user_meta_data jsonb not null default '{}'
+    encrypted_password text,
+    email_confirmed_at timestamptz,
+    raw_app_meta_data jsonb,
+    raw_user_meta_data jsonb not null default '{}',
+    created_at timestamptz,
+    updated_at timestamptz,
+    confirmation_token text,
+    recovery_token text,
+    email_change text,
+    email_change_token_new text
   );
   create function auth.uid() returns uuid language sql stable as $$
     select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
@@ -57,8 +69,13 @@ export async function createDb() {
     return res.rows[0].id;
   }
 
+  /** Loads supabase/seed.sql the way `supabase db reset` does. */
+  async function seed() {
+    await pg.exec(readFileSync(join(process.cwd(), "supabase", "seed.sql"), "utf8"));
+  }
+
   /** Superuser access for arranging fixtures. Bypasses RLS. */
   const admin = pg;
 
-  return { as, createUser, admin, close: () => pg.close() };
+  return { as, createUser, seed, admin, close: () => pg.close() };
 }
