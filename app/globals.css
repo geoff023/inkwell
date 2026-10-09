@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f4efe6;
+  --color-paper-soft: #eeeae4;
+  --color-sand: #d8c9b6;
+  --color-taupe: #817567;
+  --color-ink: #302d2a;
+  --color-muted: #777166;
+  --color-line: #e2d9cc;
+  --color-danger: #9a3b2e;
+  --color-success: #4f6b4a;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-lora), ui-serif, Georgia, serif;
+
+  --container-reading: 40rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  ::selection {
+    background: var(--color-sand);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-taupe);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Typography for entry bodies, shared by the editor and the reading view so
+   what you write looks exactly like what readers see. */
+@layer components {
+  .prose-ink {
+    font-family: var(--font-serif);
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: var(--color-ink);
+    overflow-wrap: anywhere;
+  }
+  .prose-ink > * + * {
+    margin-top: 1em;
+  }
+  .prose-ink h1 {
+    font-size: 1.6em;
+    line-height: 1.3;
+    font-weight: 600;
+    margin-top: 1.6em;
+  }
+  .prose-ink h2 {
+    font-size: 1.3em;
+    line-height: 1.35;
+    font-weight: 600;
+    margin-top: 1.4em;
+  }
+  .prose-ink ul {
+    list-style: disc;
+    padding-left: 1.5em;
+  }
+  .prose-ink ol {
+    list-style: decimal;
+    padding-left: 1.5em;
+  }
+  .prose-ink li + li {
+    margin-top: 0.25em;
+  }
+  .prose-ink blockquote {
+    border-left: 2px solid var(--color-sand);
+    padding-left: 1em;
+    color: var(--color-muted);
+    font-style: italic;
+  }
+  .prose-ink a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--color-sand);
+  }
+  .prose-ink a:hover {
+    text-decoration-color: var(--color-ink);
+  }
+  .prose-ink hr {
+    border: 0;
+    margin: 2em auto;
+    width: 4rem;
+    border-top: 1px solid var(--color-sand);
+  }
+}
