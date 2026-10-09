@@ -133,6 +133,16 @@ describe("entries", () => {
     expect(row.published_at).toBeNull();
   });
 
+  it("refuse autosaves based on a stale revision", async () => {
+    const id = await newEntry(alice, "v1");
+    const save = (text: string, base: number) =>
+      db.as(alice, "update public.entries set content_text = $1 where id = $2 and revision = $3 returning revision", [text, id, base]);
+    expect(await save("v2 from tab A", 1)).toEqual([{ revision: 2 }]);
+    expect(await save("v2 from tab B", 1)).toHaveLength(0);
+    const [row] = await db.as<{ content_text: string }>(alice, "select content_text from public.entries where id = $1", [id]);
+    expect(row.content_text).toBe("v2 from tab A");
+  });
+
   it("search only returns the caller's own entries and escapes wildcards", async () => {
     await newEntry(alice, "a lighthouse at dusk");
     const bobsPublic = await newEntry(bob, "lighthouse keeper");
