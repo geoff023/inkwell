@@ -56,18 +56,18 @@ export function HistoryPanel({
           History
         </h2>
         <dl className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-line bg-white/70 p-4">
+          <div className="rounded-xl border border-line bg-surface p-4">
             <dt className="text-xs text-muted">Time spent writing</dt>
             <dd className="mt-1 font-serif text-2xl">{formatDuration(totalSeconds)}</dd>
           </div>
-          <div className="rounded-xl border border-line bg-white/70 p-4">
+          <div className="rounded-xl border border-line bg-surface p-4">
             <dt className="text-xs text-muted">Words now</dt>
             <dd className="mt-1 font-serif text-2xl">{words.toLocaleString("en")}</dd>
           </div>
         </dl>
         <p className="mt-3 text-xs text-muted">Time counts while you type; pauses longer than 30 seconds aren&apos;t included.</p>
 
-        <h3 className="mt-8 text-xs font-medium tracking-[0.15em] text-taupe uppercase">Saves</h3>
+        <h3 className="mt-8 text-sm font-medium">Saves</h3>
         {error ? (
           <p role="alert" className="mt-3 text-sm text-danger">
             {error}

@@ -3,7 +3,7 @@ const base =
 
 const variants = {
   primary: "bg-ink text-paper hover:bg-ink/90 px-5 py-2.5",
-  secondary: "border border-line bg-white/60 text-ink hover:bg-white px-5 py-2.5",
+  secondary: "border border-line bg-surface text-ink hover:bg-white px-5 py-2.5",
   ghost: "text-muted hover:text-ink hover:bg-paper-soft px-3 py-2",
   danger: "bg-danger text-white hover:bg-danger/90 px-5 py-2.5",
 } as const;

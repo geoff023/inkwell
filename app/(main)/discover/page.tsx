@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState, FilterChips } from "@/components/entries/own-entry-list";
 import { PostList } from "@/components/feed/post-card";
+import { railAside, railGrid, railHeading, railMain } from "@/components/shell/page-grid";
+import { PageHeader } from "@/components/shell/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { getUserId } from "@/lib/auth";
 import { decodeCursor } from "@/lib/posts/cursor";
@@ -34,14 +36,10 @@ export default async function DiscoverPage({ searchParams }: PageProps<"/discove
   ];
 
   return (
-    <main className="mx-auto w-full max-w-reading px-4 py-10 sm:py-14">
-      <header>
-        <h1 className="font-serif text-3xl">Discover</h1>
-        <p className="mt-1.5 text-muted">Words people chose to share.</p>
-      </header>
+    <main className={railGrid}>
+      <PageHeader title="Discover" description="Words people chose to share." />
 
-      <div className="mt-8 space-y-4">
-        <nav aria-label="Feed" className="flex gap-6 border-b border-line">
+      <nav aria-label="Feed" className={`flex gap-6 border-b border-line ${railMain}`}>
           {tabs.map((t) => (
             <Link
               key={t.value}
@@ -52,8 +50,11 @@ export default async function DiscoverPage({ searchParams }: PageProps<"/discove
               {t.label}
             </Link>
           ))}
-        </nav>
+      </nav>
+      <div className={`-mt-4 xl:mt-2 ${railAside}`}>
+        <h2 className={`mb-3 hidden xl:block ${railHeading}`}>Topics</h2>
         <FilterChips
+          rail
           label="Topics"
           current={tag}
           hrefFor={(v) => href({ tag: v, cursor: "" })}
@@ -65,7 +66,7 @@ export default async function DiscoverPage({ searchParams }: PageProps<"/discove
         />
       </div>
 
-      <div className="mt-4">
+      <div className={`-mt-4 ${railMain}`}>
         {feed.items.length > 0 ? (
           <PostList posts={feed.items} />
         ) : feed.followsNobody ? (
@@ -90,7 +91,7 @@ export default async function DiscoverPage({ searchParams }: PageProps<"/discove
       </div>
 
       {(feed.nextCursor || cursor) && (
-        <nav aria-label="Pagination" className="mt-8 flex justify-between border-t border-line pt-6 text-sm">
+        <nav aria-label="Pagination" className={`flex justify-between border-t border-line pt-6 text-sm ${railMain}`}>
           {cursor ? (
             <Link href={href({ cursor: "" })} className="text-muted hover:text-ink">
               ← Back to newest

@@ -100,7 +100,7 @@ export function PublishPanel({ dialogRef, entryId, isPublic, tags, preview, befo
 
         {preview && makePublic && (
           <section aria-label="Preview" className="rounded-xl border border-line bg-white px-5 py-6 sm:px-8">
-            <p className="mb-4 text-xs font-medium tracking-[0.15em] text-taupe uppercase">Preview</p>
+            <p className="mb-4 text-xs text-muted">Preview</p>
             {preview.title && <h3 className="mb-4 font-serif text-2xl">{preview.title}</h3>}
             <EntryBody doc={preview.content} />
           </section>

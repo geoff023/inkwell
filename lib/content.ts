@@ -37,14 +37,28 @@ export function extractText(doc: unknown): string {
     .trim();
 }
 
-export function countWords(text: string): number {
-  const matches = text.trim().match(/\S+/g);
-  return matches ? matches.length : 0;
+// Chinese and Japanese are written without spaces, so each character counts
+// as one word (the convention Chinese word processors use). Everything else
+// counts runs of letters/digits, so stray punctuation isn't a word.
+const CJK_CHAR = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu;
+const WORD = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
+
+function textStats(text: string) {
+  const cjk = text.match(CJK_CHAR)?.length ?? 0;
+  const other = text.replace(CJK_CHAR, " ").match(WORD)?.length ?? 0;
+  return { cjk, other };
 }
 
-/** Whole minutes at ~220 words per minute, never below one for non-empty text. */
-export function readingMinutes(words: number): number {
-  return words === 0 ? 0 : Math.max(1, Math.round(words / 220));
+export function countWords(text: string): number {
+  const { cjk, other } = textStats(text);
+  return cjk + other;
+}
+
+/** Whole minutes (~220 words or ~400 Chinese characters a minute), at least one for non-empty text. */
+export function readingMinutes(text: string): number {
+  const { cjk, other } = textStats(text);
+  if (cjk + other === 0) return 0;
+  return Math.max(1, Math.round(other / 220 + cjk / 400));
 }
 
 /** Collapsed single-paragraph preview, cut on a word boundary. */

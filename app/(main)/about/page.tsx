@@ -15,8 +15,7 @@ const PRINCIPLES = [
 export default function AboutPage() {
   return (
     <main className="mx-auto w-full max-w-reading px-4 py-16 sm:py-24">
-      <p className="text-xs font-medium tracking-[0.2em] text-taupe uppercase">About</p>
-      <h1 className="mt-4 font-serif text-4xl leading-tight">A home for your words</h1>
+      <h1 className="font-serif text-4xl leading-tight">A home for your words</h1>
       <div className="prose-ink mt-8">
         <p>
           Inkwell is a diary and a small literary journal in the same place. Keep a private record of your days, and when

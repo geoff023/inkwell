@@ -2,6 +2,8 @@ import { PenLine } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState, FilterChips, OwnEntryItem, SearchForm } from "@/components/entries/own-entry-list";
+import { railAside, railGrid, railMain } from "@/components/shell/page-grid";
+import { PageHeader } from "@/components/shell/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { requireViewer } from "@/lib/auth";
 import { listOwnEntries } from "@/lib/entries/queries";
@@ -40,26 +42,26 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
   const filtered = Boolean(q || status || visibility);
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-3xl">Library</h1>
-          <p className="mt-1.5 text-sm text-muted">Everything you&apos;ve written, private and public.</p>
-        </div>
-        <Link href="/write" className={buttonClass("primary")}>
-          <PenLine aria-hidden className="size-4" /> New entry
-        </Link>
-      </header>
+    <main className={railGrid}>
+      <PageHeader
+        title="Library"
+        description="Everything you've written, private and public."
+        action={
+          <Link href="/write" className={buttonClass("primary")}>
+            <PenLine aria-hidden className="size-4" /> New entry
+          </Link>
+        }
+      />
 
-      <div className="mt-8 space-y-4">
+      <div className={`space-y-4 xl:mt-2 xl:space-y-6 ${railAside}`}>
         <SearchForm action="/library" q={q} placeholder="Search titles, text and tags" hidden={{ ...(status && { status }), ...(visibility && { visibility }) }} />
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <FilterChips label="Filter by status" options={STATUS_OPTIONS} current={status} hrefFor={(v) => hrefWith("status", v)} />
-          <FilterChips label="Filter by visibility" options={VISIBILITY_OPTIONS} current={visibility} hrefFor={(v) => hrefWith("visibility", v)} />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch xl:gap-6">
+          <FilterChips rail label="Filter by status" options={STATUS_OPTIONS} current={status} hrefFor={(v) => hrefWith("status", v)} />
+          <FilterChips rail label="Filter by visibility" options={VISIBILITY_OPTIONS} current={visibility} hrefFor={(v) => hrefWith("visibility", v)} />
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className={railMain}>
         {entries.length === 0 ? (
           filtered ? (
             <EmptyState title="Nothing matches these filters.">

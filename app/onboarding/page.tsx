@@ -16,7 +16,7 @@ export default async function OnboardingPage() {
       <main className="mx-auto w-full max-w-lg flex-1 py-10 sm:py-16">
         <h1 className="font-serif text-3xl sm:text-4xl">Welcome, {viewer.display_name}.</h1>
         <p className="mt-4 text-lg leading-relaxed text-muted">This is a place for your words. Before you begin, one thing worth knowing:</p>
-        <div className="mt-6 flex gap-4 rounded-xl border border-line bg-white/70 p-5">
+        <div className="mt-6 flex gap-4 rounded-xl border border-line bg-surface p-5">
           <Lock aria-hidden className="mt-0.5 size-5 shrink-0 text-taupe" strokeWidth={1.6} />
           <p className="leading-relaxed">
             <strong className="font-medium">Every new entry starts private.</strong> Only you can see it. When something feels

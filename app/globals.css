@@ -8,6 +8,8 @@
   --color-ink: #302d2a;
   --color-muted: #777166;
   --color-line: #e2d9cc;
+  /* Raised paper: cards, panels and quiet callouts sit on this. */
+  --color-surface: #fbf8f3;
   --color-danger: #9a3b2e;
   --color-success: #4f6b4a;
 
@@ -22,6 +24,17 @@
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+  }
+  /* Big monitors: nudge the whole rem scale up so text isn't tiny. */
+  @media (min-width: 1800px) {
+    html {
+      font-size: 106.25%;
+    }
+  }
+  @media (min-width: 2400px) {
+    html {
+      font-size: 112.5%;
+    }
   }
 
   body {

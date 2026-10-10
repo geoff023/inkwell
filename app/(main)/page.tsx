@@ -58,10 +58,10 @@ export default async function Landing({ searchParams }: PageProps<"/">) {
           Your account and writing have been deleted.
         </p>
       )}
-      <section className="mx-auto grid max-w-5xl gap-14 px-4 pt-16 pb-20 sm:pt-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+      <section className="mx-auto grid max-w-6xl gap-14 px-4 pt-16 pb-20 sm:px-6 sm:pt-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center xl:gap-20 xl:pt-32 xl:pb-28 2xl:max-w-7xl">
         <div>
-          <p className="text-xs font-medium tracking-[0.2em] text-taupe uppercase">For the words that need somewhere to go</p>
-          <h1 className="mt-5 font-serif text-4xl leading-[1.15] text-balance sm:text-5xl">
+          <p className="font-serif text-lg text-taupe italic">For the words that need somewhere to go.</p>
+          <h1 className="mt-5 font-serif text-4xl leading-[1.15] text-balance sm:text-5xl xl:text-6xl">
             Some words are just for you. Others are waiting to be found.
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
@@ -82,7 +82,7 @@ export default async function Landing({ searchParams }: PageProps<"/">) {
           {SAMPLES.map((s, i) => (
             <article
               key={s.author}
-              className={`rounded-xl border border-line bg-white/70 p-5 ${i === 1 ? "lg:translate-x-8" : ""}`}
+              className={`rounded-xl border border-line bg-surface p-5 ${i === 1 ? "lg:translate-x-8" : ""}`}
             >
               <div className="flex items-center justify-between text-xs text-muted">
                 <span>
@@ -98,7 +98,7 @@ export default async function Landing({ searchParams }: PageProps<"/">) {
       </section>
 
       <section className="border-y border-line bg-paper-soft/60">
-        <div className="mx-auto grid max-w-5xl gap-x-12 gap-y-12 px-4 py-20 sm:grid-cols-2">
+        <div className="mx-auto grid max-w-6xl gap-x-12 gap-y-12 px-4 py-20 sm:grid-cols-2 sm:px-6 xl:grid-cols-4 xl:gap-x-10 2xl:max-w-7xl">
           {FEATURES.map(({ icon: Icon, title, body }) => (
             <div key={title}>
               <Icon aria-hidden className="size-5 text-taupe" strokeWidth={1.6} />
@@ -118,7 +118,7 @@ export default async function Landing({ searchParams }: PageProps<"/">) {
       </section>
 
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm text-muted">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 sm:px-6 2xl:max-w-7xl text-sm text-muted">
           <span className="font-serif text-ink">Inkwell</span>
           <nav aria-label="Footer" className="flex gap-5">
             <Link href="/about" className="hover:text-ink">

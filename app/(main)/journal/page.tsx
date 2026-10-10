@@ -2,6 +2,8 @@ import { Lock, PenLine } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState, FilterChips, OwnEntryItem, SearchForm } from "@/components/entries/own-entry-list";
+import { railAside, railGrid, railMain } from "@/components/shell/page-grid";
+import { PageHeader } from "@/components/shell/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { requireViewer } from "@/lib/auth";
 import { groupByDay } from "@/lib/dates";
@@ -29,32 +31,35 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
   };
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-3xl">Journal</h1>
-          <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted">
-            <Lock aria-hidden className="size-3.5" /> Private entries and drafts. Only you can see these.
-          </p>
-        </div>
-        <Link href="/write" className={buttonClass("primary")}>
-          <PenLine aria-hidden className="size-4" /> New entry
-        </Link>
-      </header>
+    <main className={railGrid}>
+      <PageHeader
+        title="Journal"
+        description={
+          <>
+            <Lock aria-hidden className="size-4 shrink-0" /> Private entries and drafts. Only you can see these.
+          </>
+        }
+        action={
+          <Link href="/write" className={buttonClass("primary")}>
+            <PenLine aria-hidden className="size-4" /> New entry
+          </Link>
+        }
+      />
 
-      <div className="mt-8 space-y-4">
+      <div className={`space-y-4 xl:mt-2 xl:space-y-6 ${railAside}`}>
         <SearchForm action="/journal" q={q} placeholder="Search your journal" />
         {tagOptions.length > 0 && (
           <FilterChips
             label="Filter by tag"
             current={tag}
             hrefFor={hrefFor}
+            rail
             options={[{ value: "", label: "All" }, ...tagOptions.map(([value, label]) => ({ value, label: `#${label}` }))]}
           />
         )}
       </div>
 
-      <div className="mt-8">
+      <div className={railMain}>
         {entries.length === 0 ? (
           q || tag ? (
             <EmptyState title="Nothing matches that search.">
@@ -72,7 +77,7 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
         ) : (
           groups.map((g) => (
             <section key={g.day} aria-labelledby={`day-${g.day}`} className="mb-6">
-              <h2 id={`day-${g.day}`} className="sticky top-16 z-10 bg-paper/95 py-2 text-xs font-medium tracking-[0.15em] text-taupe uppercase backdrop-blur-sm">
+              <h2 id={`day-${g.day}`} className="sticky top-14 z-10 bg-paper/95 py-2 font-serif text-sm text-taupe italic backdrop-blur-sm lg:top-0">
                 {g.day}
               </h2>
               <div className="divide-y divide-line">

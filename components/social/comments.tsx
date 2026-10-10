@@ -7,6 +7,7 @@ import { FormMessage } from "@/components/ui/form";
 import { formatDate } from "@/lib/dates";
 import { addComment, deleteComment, editComment } from "@/lib/posts/actions";
 import type { CommentView } from "@/lib/posts/queries";
+import { sectionHeading } from "@/components/shell/page-grid";
 import { Avatar } from "./avatar";
 import { ReportDialog } from "./report-dialog";
 
@@ -156,15 +157,15 @@ export function Comments({
   loginHref: string;
 }) {
   return (
-    <section aria-labelledby="comments-heading" className="mt-16 border-t border-line pt-10">
-      <h2 id="comments-heading" className="font-serif text-2xl">
+    <section aria-labelledby="comments-heading" className="mt-4 pt-6 xl:border-t xl:border-line xl:pt-10">
+      <h2 id="comments-heading" className={sectionHeading}>
         {comments.length === 0 ? "Responses" : `${comments.length} ${comments.length === 1 ? "response" : "responses"}`}
       </h2>
       <div className="mt-6">
         {viewerId ? (
           <CommentForm submitLabel="Respond" onSubmit={(text) => addComment(entryId, text)} />
         ) : (
-          <p className="rounded-xl border border-line bg-white/60 px-4 py-3 text-sm text-muted">
+          <p className="rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">
             <Link href={loginHref} className="text-ink underline underline-offset-4">
               Log in
             </Link>{" "}

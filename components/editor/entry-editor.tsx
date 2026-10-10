@@ -40,6 +40,7 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const previewing = snapshot !== null;
   const [words, setWords] = useState(0);
+  const [minutes, setMinutes] = useState(0);
   const [panelPreview, setPanelPreview] = useState<{ title: string; content: DocNode } | null>(null);
   const titleRef = useRef(entry.title);
   const editorRef = useRef<Editor | null>(null);
@@ -74,7 +75,11 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
   });
   const { markDirty, flush } = autosave;
 
-  const updateCount = (ed: Editor) => setWords(countWords(ed.state.doc.textBetween(0, ed.state.doc.content.size, "\n")));
+  const updateCount = (ed: Editor) => {
+    const text = ed.state.doc.textBetween(0, ed.state.doc.content.size, "\n");
+    setWords(countWords(text));
+    setMinutes(readingMinutes(text));
+  };
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -175,8 +180,8 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30">
         <div className="border-b border-line bg-paper/95 backdrop-blur-sm">
-          <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-2 px-2 sm:px-4">
-            <div className="flex min-w-0 items-center gap-1 sm:gap-3">
+          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-2 sm:px-6">
+            <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
               <Link
                 href="/library"
                 onClick={(e) => {
@@ -191,10 +196,10 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
               </Link>
               <SaveIndicator status={autosave.status} error={autosave.error} notice={notice} onRetry={() => void flush()} />
             </div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <span className="hidden text-xs text-muted sm:inline">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <span className="mr-1 hidden text-xs whitespace-nowrap text-muted lg:inline">
                 {words} {words === 1 ? "word" : "words"}
-                {words > 0 && ` · ${readingMinutes(words)} min read`}
+                {words > 0 && ` · ${minutes} min read`}
               </span>
               <button
                 type="button"
@@ -203,8 +208,8 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
                 className={buttonClass("ghost", "px-2.5 aria-pressed:bg-paper-soft aria-pressed:text-ink")}
               >
                 {previewing ? <PenLine aria-hidden className="size-4" /> : <Eye aria-hidden className="size-4" />}
-                <span className="hidden sm:inline">{previewing ? "Edit" : "Preview"}</span>
-                <span className="sr-only sm:hidden">{previewing ? "Back to editing" : "Preview"}</span>
+                <span className="hidden md:inline">{previewing ? "Edit" : "Preview"}</span>
+                <span className="sr-only md:hidden">{previewing ? "Back to editing" : "Preview"}</span>
               </button>
               {created && (
                 <button type="button" onClick={openHistory} className={buttonClass("ghost", "px-2.5")} title="History">
@@ -257,10 +262,22 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
         <p className="mb-6 flex items-center gap-1.5 text-xs text-muted">
           {isPublic ? <Globe aria-hidden className="size-3.5" /> : <Lock aria-hidden className="size-3.5" />}
           {isPublic ? "Public. Anyone can read this." : everPublished ? "Unpublished. Only you can see this." : "Private draft. Only you can see this."}
+          {isPublic && (
+            <Link
+              href={`/post/${entry.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                void leave(`/post/${entry.id}`);
+              }}
+              className="ml-1 text-ink underline underline-offset-2"
+            >
+              View post
+            </Link>
+          )}
           {tags.length > 0 && <span className="ml-1 truncate">· {tags.join(", ")}</span>}
         </p>
 
-        {prompt && !previewing && <p className="mb-4 font-serif text-lg text-taupe italic">{prompt}</p>}
+        {prompt && !previewing && <p className="mb-4 font-serif text-lg text-taupe italic first-letter:uppercase">{prompt}</p>}
 
         <div hidden={previewing}>
           <label htmlFor="entry-title" className="sr-only">
@@ -341,7 +358,7 @@ function SaveIndicator({
   const failed = status === "error" || status === "blocked";
   if (notice && !failed) {
     return (
-      <p role="status" aria-live="polite" className="truncate text-xs text-ink">
+      <p role="status" aria-live="polite" title={notice} className="min-w-0 truncate text-xs text-ink">
         {notice}
       </p>
     );

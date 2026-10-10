@@ -98,20 +98,32 @@ export function FilterChips({
   options,
   current,
   hrefFor,
+  rail = false,
 }: {
+  /** In a side column on wide screens, list options vertically there. */
+  rail?: boolean;
   label: string;
   options: { value: string; label: string }[];
   current: string;
   hrefFor: (value: string) => string;
 }) {
   return (
-    <nav aria-label={label} className="flex flex-wrap gap-1.5">
+    <nav
+      aria-label={label}
+      className={`-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 ${
+        rail ? "xl:flex-col xl:items-start xl:gap-0.5" : ""
+      }`}
+    >
       {options.map((o) => (
         <Link
           key={o.value}
           href={hrefFor(o.value)}
           aria-current={o.value === current ? "page" : undefined}
-          className="rounded-full border border-line px-3 py-1 text-sm text-muted hover:text-ink aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-paper"
+          className={`shrink-0 rounded-full border border-line px-3 py-1 text-sm text-muted hover:text-ink aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-paper ${
+            rail
+              ? "xl:rounded-md xl:border-0 xl:px-2.5 xl:py-1.5 xl:aria-[current=page]:bg-paper-soft xl:aria-[current=page]:font-medium xl:aria-[current=page]:text-ink"
+              : ""
+          }`}
         >
           {o.label}
         </Link>

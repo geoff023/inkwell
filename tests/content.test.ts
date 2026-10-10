@@ -36,15 +36,24 @@ describe("extractText", () => {
 });
 
 describe("word count and reading time", () => {
-  it("counts whitespace-separated words", () => {
+  it("counts words, ignoring stray punctuation", () => {
     expect(countWords("")).toBe(0);
     expect(countWords("  one\ntwo   three ")).toBe(3);
+    expect(countWords("don't stop — ever.")).toBe(3);
+  });
+
+  it("counts each Chinese or Japanese character as a word", () => {
+    expect(countWords("我只是还不想放弃")).toBe(8);
+    expect(countWords("在一段恋情里，我总是")).toBe(9);
+    expect(countWords("雨后的早晨 A morning after rain")).toBe(9);
+    expect(countWords("ありがとう")).toBe(5);
   });
 
   it("rounds reading time with a one-minute floor", () => {
-    expect(readingMinutes(0)).toBe(0);
-    expect(readingMinutes(10)).toBe(1);
-    expect(readingMinutes(660)).toBe(3);
+    expect(readingMinutes("")).toBe(0);
+    expect(readingMinutes("word ".repeat(10))).toBe(1);
+    expect(readingMinutes("word ".repeat(660))).toBe(3);
+    expect(readingMinutes("字".repeat(1200))).toBe(3);
   });
 });
 

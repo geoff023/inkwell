@@ -97,7 +97,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
   let index = 0;
   return (
     <div className="border-b border-line bg-paper/95 backdrop-blur-sm">
-      <div role="toolbar" aria-label="Formatting" className="mx-auto flex max-w-3xl items-center gap-0.5 overflow-x-auto px-2 py-1.5 [scrollbar-width:none] sm:px-4">
+      <div role="toolbar" aria-label="Formatting" className="mx-auto flex max-w-6xl items-center gap-0.5 overflow-x-auto px-2 py-1.5 [scrollbar-width:none] sm:px-6">
         <label htmlFor="text-style" className="sr-only">
           Text style
         </label>
@@ -157,7 +157,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
         ))}
       </div>
       {linkOpen && (
-        <form onSubmit={applyLink} className="mx-auto flex max-w-3xl flex-wrap items-center gap-2 px-4 pb-2.5">
+        <form onSubmit={applyLink} className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pb-2.5 sm:px-6">
           <label htmlFor="link-href" className="sr-only">
             Link address
           </label>

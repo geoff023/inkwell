@@ -19,20 +19,33 @@ function useIsActive() {
   return (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function DesktopNav() {
+/**
+ * Sidebar sections, set in the serif like a journal's contents page. When
+ * the frame is collapsed the labels become screen-reader text and tooltips.
+ */
+export function SidebarNav() {
   const isActive = useIsActive();
   return (
-    <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
-      {APP_LINKS.map(({ href, label }) => (
-        <Link
-          key={href}
-          href={href}
-          aria-current={isActive(href) ? "page" : undefined}
-          className="rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink aria-[current=page]:bg-paper-soft aria-[current=page]:text-ink"
-        >
-          {label}
-        </Link>
-      ))}
+    <nav aria-label="Main">
+      <ul className="space-y-1">
+        {APP_LINKS.map(({ href, label, icon: Icon }) => (
+          <li key={href}>
+            <Link
+              href={href}
+              title={label}
+              aria-current={isActive(href) ? "page" : undefined}
+              className="group flex h-10 items-center gap-3 rounded-lg px-3 font-serif text-[1.05rem] whitespace-nowrap text-muted transition-colors hover:bg-paper-soft hover:text-ink aria-[current=page]:bg-surface aria-[current=page]:text-ink aria-[current=page]:shadow-[inset_0_0_0_1px_var(--color-line)] group-data-[collapsed=true]/shell:mx-auto group-data-[collapsed=true]/shell:size-10 group-data-[collapsed=true]/shell:justify-center group-data-[collapsed=true]/shell:px-0"
+            >
+              <Icon aria-hidden className="size-[1.1rem] shrink-0 text-taupe group-hover:text-ink group-aria-[current=page]:text-ink" strokeWidth={1.5} />
+              <span className="group-data-[collapsed=true]/shell:sr-only">{label}</span>
+              <span
+                aria-hidden
+                className="ml-auto size-1.5 rounded-full bg-ink opacity-0 group-aria-[current=page]:opacity-100 group-data-[collapsed=true]/shell:hidden"
+              />
+            </Link>
+          </li>
+        ))}
+      </ul>
     </nav>
   );
 }
@@ -44,7 +57,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden"
     >
       <ul className="mx-auto grid max-w-md grid-cols-5">
         {MOBILE_LINKS.map(({ href, label, icon: Icon }) => (
@@ -85,7 +98,7 @@ export function AccountMenu({ username, displayName }: { username: string; displ
         <Link href={`/u/${username}`} className={item}>
           <UserRound aria-hidden className="size-4" /> Your profile
         </Link>
-        <Link href="/saved" className={`${item} md:hidden`}>
+        <Link href="/saved" className={item}>
           <Bookmark aria-hidden className="size-4" /> Saved
         </Link>
         <Link href="/settings" className={item}>
