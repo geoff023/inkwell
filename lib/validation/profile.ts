@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { displayNameSchema, usernameSchema } from "./auth";
 
 export const INTERESTS = [
   { slug: "reflections", label: "Reflections" },
@@ -14,3 +15,16 @@ export const INTERESTS = [
 const interestSlugs = INTERESTS.map((i) => i.slug) as [string, ...string[]];
 
 export const interestsSchema = z.array(z.enum(interestSlugs)).max(INTERESTS.length);
+
+export const bioSchema = z
+  .string()
+  .trim()
+  .max(280, "Keep your bio under 280 characters.")
+  .transform((b) => b || null);
+
+export const profileSchema = z.object({
+  displayName: displayNameSchema,
+  username: usernameSchema,
+  bio: bioSchema,
+  interests: interestsSchema,
+});

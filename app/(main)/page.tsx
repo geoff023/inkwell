@@ -49,9 +49,15 @@ const FEATURES = [
   },
 ];
 
-export default function Landing() {
+export default async function Landing({ searchParams }: PageProps<"/">) {
+  const deleted = (await searchParams).account === "deleted";
   return (
     <main className="overflow-x-clip">
+      {deleted && (
+        <p role="status" className="bg-paper-soft px-4 py-3 text-center text-sm text-muted">
+          Your account and writing have been deleted.
+        </p>
+      )}
       <section className="mx-auto grid max-w-5xl gap-14 px-4 pt-16 pb-20 sm:pt-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div>
           <p className="text-xs font-medium tracking-[0.2em] text-taupe uppercase">For the words that need somewhere to go</p>
