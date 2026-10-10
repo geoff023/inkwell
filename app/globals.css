@@ -11,8 +11,10 @@
   --color-danger: #9a3b2e;
   --color-success: #4f6b4a;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-lora), ui-serif, Georgia, serif;
+  /* Latin glyphs come from the first font; Chinese falls through to the
+     CJK font, so mixed text keeps one consistent, literary voice. */
+  --font-sans: var(--font-inter), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-lora), var(--font-noto-serif-sc), "Songti SC", "SimSun", ui-serif, Georgia, serif;
 
   --container-reading: 40rem;
 }
@@ -69,12 +71,17 @@
     font-weight: 600;
     margin-top: 1.6em;
   }
+  /* Subtitle: quieter than the body's headings, lighter and grey. */
   .prose-ink h2:not(.heading-1),
   .prose-ink h3 {
-    font-size: 1.3em;
-    line-height: 1.35;
-    font-weight: 600;
-    margin-top: 1.4em;
+    font-size: 1.25em;
+    line-height: 1.45;
+    font-weight: 400;
+    color: var(--color-muted);
+    margin-top: 1.2em;
+  }
+  .prose-ink :is(h1, .heading-1) + :is(h2:not(.heading-1), h3) {
+    margin-top: 0.35em;
   }
   .prose-ink ul {
     list-style: disc;

@@ -16,6 +16,8 @@ export const saveEntrySchema = z.object({
     .transform((t) => t.trim() || null),
   content: docSchema,
   baseRevision: z.number().int().positive().nullable(),
+  /** Client-measured active writing time; the database clamps it. */
+  writingSeconds: z.number().int().min(0).max(10_000_000).default(0),
 });
 
 export type SaveEntryInput = z.input<typeof saveEntrySchema>;

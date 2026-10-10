@@ -15,7 +15,7 @@ export default async function NewEntryPage({ searchParams }: PageProps<"/write">
     <EntryEditor
       key={id}
       prompt={promptAt(prompt)}
-      entry={{ id, title: "", content: EMPTY_DOC, revision: null, isPublic: false, everPublished: false, tags: [] }}
+      entry={{ id, title: "", content: EMPTY_DOC, revision: null, isPublic: false, everPublished: false, tags: [], writingSeconds: 0 }}
     />
   );
 }

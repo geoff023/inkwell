@@ -3,7 +3,7 @@
 import { Placeholder } from "@tiptap/extensions";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { ArrowLeft, Eye, Globe, Lock, PenLine, Trash2 } from "lucide-react";
+import { ArrowLeft, Clock, Eye, Globe, Lock, PenLine, Save, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -11,7 +11,9 @@ import { EntryBody } from "@/components/entries/entry-body";
 import { buttonClass } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { countWords, readingMinutes, safeHref, type DocNode } from "@/lib/content";
-import { deleteEntry } from "@/lib/entries/actions";
+import { deleteEntry, saveCheckpoint } from "@/lib/entries/actions";
+import { formatDuration, signed } from "@/lib/entries/history";
+import { HistoryPanel, useHistoryPanel } from "./history-panel";
 import { PublishPanel } from "./publish-panel";
 import { Toolbar } from "./toolbar";
 import { useAutosave, type SaveStatus, type Snapshot } from "./use-autosave";
@@ -25,6 +27,7 @@ export type EditorEntry = {
   isPublic: boolean;
   everPublished: boolean;
   tags: string[];
+  writingSeconds: number;
 };
 
 export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: string }) {
@@ -41,6 +44,11 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
   const titleRef = useRef(entry.title);
   const editorRef = useRef<Editor | null>(null);
   const panelRef = useRef<HTMLDialogElement>(null);
+  const historyRef = useRef<HTMLDialogElement>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [checkpointing, setCheckpointing] = useState(false);
+  const [historySeconds, setHistorySeconds] = useState(entry.writingSeconds);
+  const history = useHistoryPanel(entry.id, historyRef);
 
   const getSnapshot = useCallback(() => {
     const ed = editorRef.current;
@@ -57,7 +65,13 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
     window.history.replaceState(null, "", `/write/${entry.id}`);
   }, [entry.id]);
 
-  const autosave = useAutosave({ id: entry.id, initialRevision: entry.revision, getSnapshot, onCreated });
+  const autosave = useAutosave({
+    id: entry.id,
+    initialRevision: entry.revision,
+    initialWritingSeconds: entry.writingSeconds,
+    getSnapshot,
+    onCreated,
+  });
   const { markDirty, flush } = autosave;
 
   const updateCount = (ed: Editor) => setWords(countWords(ed.state.doc.textBetween(0, ed.state.doc.content.size, "\n")));
@@ -114,6 +128,41 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
     router.push(href);
   };
 
+  // Clear the "Draft saved" note a few seconds after showing it.
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), 5000);
+    return () => clearTimeout(t);
+  }, [notice]);
+
+  const saveDraft = async () => {
+    setCheckpointing(true);
+    try {
+      if (!(await flush())) return;
+      if (!autosave.isCreated()) {
+        setNotice("Nothing to save yet.");
+        return;
+      }
+      const res = await saveCheckpoint(entry.id);
+      if (!res.ok) setNotice(res.message);
+      else if (res.unchanged) setNotice("No changes since your last save.");
+      else {
+        const parts = [signed(res.change.words, "word")];
+        if (res.change.seconds > 0) parts.push(`${formatDuration(res.change.seconds)} writing`);
+        setNotice(`Draft saved · ${parts.join(" · ")}`);
+      }
+    } catch {
+      setNotice("Couldn't save. Check your connection.");
+    } finally {
+      setCheckpointing(false);
+    }
+  };
+
+  const openHistory = () => {
+    setHistorySeconds(autosave.writingSeconds());
+    void history.open();
+  };
+
   const openPanel = async () => {
     await flush();
     setPanelPreview(getSnapshot());
@@ -140,7 +189,7 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
                 <span className="hidden sm:inline">Library</span>
                 <span className="sr-only sm:hidden">Back to library</span>
               </Link>
-              <SaveIndicator status={autosave.status} error={autosave.error} onRetry={() => void flush()} />
+              <SaveIndicator status={autosave.status} error={autosave.error} notice={notice} onRetry={() => void flush()} />
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <span className="hidden text-xs text-muted sm:inline">
@@ -157,6 +206,12 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
                 <span className="hidden sm:inline">{previewing ? "Edit" : "Preview"}</span>
                 <span className="sr-only sm:hidden">{previewing ? "Back to editing" : "Preview"}</span>
               </button>
+              {created && (
+                <button type="button" onClick={openHistory} className={buttonClass("ghost", "px-2.5")} title="History">
+                  <Clock aria-hidden className="size-4" />
+                  <span className="sr-only">History and time spent</span>
+                </button>
+              )}
               {created && (
                 <ConfirmDialog
                   trigger={
@@ -178,6 +233,16 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
                   fields={{ id: entry.id, redirectTo: "/library" }}
                 />
               )}
+              <button
+                type="button"
+                onClick={() => void saveDraft()}
+                disabled={checkpointing || autosave.status === "blocked"}
+                className={buttonClass("secondary", "px-2.5 py-2 sm:px-4")}
+              >
+                <Save aria-hidden className="size-4" />
+                <span className="hidden sm:inline">{checkpointing ? "Saving…" : "Save draft"}</span>
+                <span className="sr-only sm:hidden">Save draft</span>
+              </button>
               <button type="button" onClick={() => void openPanel()} disabled={!canPublish} className={buttonClass("primary", "px-4 py-2")}>
                 {isPublic ? <Globe aria-hidden className="size-4" /> : null}
                 {isPublic ? "Published" : "Publish"}
@@ -233,6 +298,8 @@ export function EntryEditor({ entry, prompt }: { entry: EditorEntry; prompt?: st
         )}
       </main>
 
+      <HistoryPanel dialogRef={historyRef} items={history.items} error={history.error} totalSeconds={historySeconds} words={words} />
+
       <PublishPanel
         dialogRef={panelRef}
         entryId={entry.id}
@@ -260,8 +327,25 @@ const STATUS_TEXT: Record<SaveStatus, string> = {
   blocked: "Not saving",
 };
 
-function SaveIndicator({ status, error, onRetry }: { status: SaveStatus; error: string | null; onRetry: () => void }) {
+function SaveIndicator({
+  status,
+  error,
+  notice,
+  onRetry,
+}: {
+  status: SaveStatus;
+  error: string | null;
+  notice: string | null;
+  onRetry: () => void;
+}) {
   const failed = status === "error" || status === "blocked";
+  if (notice && !failed) {
+    return (
+      <p role="status" aria-live="polite" className="truncate text-xs text-ink">
+        {notice}
+      </p>
+    );
+  }
   return (
     <p role="status" aria-live="polite" className={`flex min-w-0 items-center gap-2 text-xs ${failed ? "text-danger" : "text-muted"}`}>
       <span className="truncate" title={failed ? (error ?? undefined) : undefined}>

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getUserId } from "@/lib/auth";
-import { extractText } from "@/lib/content";
+import { countWords, extractText } from "@/lib/content";
+import { diff, type Change } from "@/lib/entries/history";
 import { canPublish, publishedState, unpublishedState } from "@/lib/entries/state";
 import { supabaseServer } from "@/lib/supabase/server";
 import { entryIdSchema, saveEntrySchema, tagsSchema, type SaveEntryInput } from "@/lib/validation/entry";
@@ -29,12 +30,12 @@ export async function saveEntry(input: SaveEntryInput): Promise<SaveResult> {
   const parsed = saveEntrySchema.safeParse(input);
   if (!parsed.success) return { ok: false, reason: "invalid", message: parsed.error.issues[0]?.message ?? "Invalid entry." };
 
-  const { id, title, content, baseRevision } = parsed.data;
+  const { id, title, content, baseRevision, writingSeconds } = parsed.data;
   const contentText = extractText(content);
   if (contentText.length > MAX_TEXT_CHARS) return { ok: false, reason: "invalid", message: "This entry is too long to save." };
 
   const supabase = await supabaseServer();
-  const fields = { title, content_json: content as Json, content_text: contentText };
+  const fields = { title, content_json: content as Json, content_text: contentText, writing_seconds: writingSeconds };
 
   if (baseRevision === null) {
     const { data, error } = await supabase.from("entries").insert({ id, ...fields }).select("revision, updated_at").single();
@@ -86,6 +87,7 @@ export async function updatePublication(input: { id: string; tags: string[]; mak
   const next = input.makePublic ? publishedState() : unpublishedState(entry);
   const { data, error } = await supabase.from("entries").update(next).eq("id", id.data).select("revision").single();
   if (error) return { ok: false, message: "Couldn't update this entry. Try again." };
+  if (next.status !== entry.status) await recordCheckpoint(supabase, id.data, input.makePublic ? "publish" : "unpublish");
 
   revalidatePath("/", "layout");
   return { ok: true, revision: data.revision };
@@ -117,6 +119,7 @@ export async function unpublishEntry(id: string): Promise<PublishResult> {
   if (!entry) return { ok: false, message: "This entry no longer exists." };
   const { data, error } = await supabase.from("entries").update(unpublishedState(entry)).eq("id", parsed.data).select("revision").single();
   if (error) return { ok: false, message: "Couldn't unpublish. Try again." };
+  if (entry.status === "published") await recordCheckpoint(supabase, parsed.data, "unpublish");
   revalidatePath("/", "layout");
   return { ok: true, revision: data.revision };
 }
@@ -132,4 +135,74 @@ export async function deleteEntry(fd: FormData): Promise<void> {
   revalidatePath("/", "layout");
   const redirectTo = fd.get("redirectTo");
   if (redirectTo === "/library" || redirectTo === "/journal") redirect(redirectTo);
+}
+
+// ---------------------------------------------------------------------------
+// Save history
+// ---------------------------------------------------------------------------
+
+type Supabase = Awaited<ReturnType<typeof supabaseServer>>;
+type CheckpointKind = "save" | "publish" | "unpublish";
+
+/**
+ * Snapshots the entry as stored (never client-reported numbers). A "save"
+ * identical to the previous checkpoint is skipped and reported as unchanged.
+ */
+async function recordCheckpoint(supabase: Supabase, entryId: string, kind: CheckpointKind) {
+  const { data: entry } = await supabase.from("entries").select("title, content_text, writing_seconds").eq("id", entryId).maybeSingle();
+  if (!entry) return { ok: false as const };
+  const snapshot = {
+    title: entry.title,
+    word_count: countWords(entry.content_text),
+    char_count: entry.content_text.length,
+    writing_seconds: entry.writing_seconds,
+  };
+  const { data: last } = await supabase
+    .from("entry_checkpoints")
+    .select("title, word_count, char_count, writing_seconds")
+    .eq("entry_id", entryId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const change = diff(snapshot, last ?? undefined);
+  if (kind === "save" && last && !change.titleChanged && change.words === 0 && change.chars === 0) {
+    return { ok: true as const, unchanged: true, change };
+  }
+  const { error } = await supabase.from("entry_checkpoints").insert({ entry_id: entryId, kind, ...snapshot });
+  return error ? { ok: false as const } : { ok: true as const, unchanged: false, change };
+}
+
+/** "Save draft": the editor flushes pending edits first, then calls this. */
+export async function saveCheckpoint(
+  entryId: string,
+): Promise<{ ok: true; unchanged: boolean; change: Change } | { ok: false; message: string }> {
+  if (!(await getUserId())) return { ok: false, message: "You've been signed out. Log in and try again." };
+  if (!entryIdSchema.safeParse(entryId).success) return { ok: false, message: "Unknown entry." };
+  const res = await recordCheckpoint(await supabaseServer(), entryId, "save");
+  return res.ok ? { ok: true, unchanged: res.unchanged, change: res.change } : { ok: false, message: "Couldn't save a checkpoint. Try again." };
+}
+
+export type Checkpoint = {
+  id: string;
+  kind: CheckpointKind;
+  title: string | null;
+  word_count: number;
+  char_count: number;
+  writing_seconds: number;
+  created_at: string;
+};
+
+export async function listCheckpoints(entryId: string): Promise<{ ok: true; items: Checkpoint[] } | { ok: false; message: string }> {
+  if (!(await getUserId())) return { ok: false, message: "You've been signed out." };
+  if (!entryIdSchema.safeParse(entryId).success) return { ok: false, message: "Unknown entry." };
+  const supabase = await supabaseServer();
+  const { data, error } = await supabase
+    .from("entry_checkpoints")
+    .select("id, kind, title, word_count, char_count, writing_seconds, created_at")
+    .eq("entry_id", entryId)
+    .order("created_at", { ascending: false })
+    // ponytail: newest 100 checkpoints; paginate if people save that often.
+    .limit(100);
+  if (error) return { ok: false, message: "Couldn't load the history." };
+  return { ok: true, items: data };
 }

@@ -10,6 +10,8 @@ export type Snapshot = { title: string; content: DocNode; empty: boolean };
 
 const DEBOUNCE_MS = 1000;
 const RETRY_MS = 5000;
+/** Gaps between edits longer than this count as a break, not writing time. */
+const IDLE_MS = 30_000;
 
 /**
  * Debounced, ordered autosave.
@@ -24,6 +26,7 @@ const RETRY_MS = 5000;
 export function useAutosave(opts: {
   id: string;
   initialRevision: number | null;
+  initialWritingSeconds: number;
   getSnapshot: () => Snapshot;
   onCreated: () => void;
 }) {
@@ -39,6 +42,8 @@ export function useAutosave(opts: {
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const blocked = useRef(false);
   const flushRef = useRef<() => Promise<boolean>>(async () => true);
+  const writingMs = useRef(opts.initialWritingSeconds * 1000);
+  const lastEditAt = useRef<number | null>(null);
 
   const schedule = useCallback((delay = DEBOUNCE_MS) => {
     clearTimeout(timer.current);
@@ -64,7 +69,13 @@ export function useAutosave(opts: {
     const wasNew = revision.current === null;
     const run = (async () => {
       try {
-        const res = await saveEntry({ id, title: snap.title, content: snap.content, baseRevision: revision.current });
+        const res = await saveEntry({
+          id,
+          title: snap.title,
+          content: snap.content,
+          baseRevision: revision.current,
+          writingSeconds: Math.floor(writingMs.current / 1000),
+        });
         if (res.ok) {
           revision.current = res.revision;
           savedVersion.current = version;
@@ -107,6 +118,11 @@ export function useAutosave(opts: {
   }, [flush]);
 
   const markDirty = useCallback(() => {
+    // Active time: the gap since the previous edit, unless it was a break.
+    const now = Date.now();
+    const gap = lastEditAt.current === null ? 1000 : now - lastEditAt.current;
+    writingMs.current += gap < IDLE_MS ? gap : 1000;
+    lastEditAt.current = now;
     editVersion.current += 1;
     if (blocked.current) return;
     setStatus((s) => (s === "saving" ? s : "dirty"));
@@ -140,6 +156,7 @@ export function useAutosave(opts: {
     flush,
     hasUnsaved,
     isCreated: () => revision.current !== null,
+    writingSeconds: () => Math.floor(writingMs.current / 1000),
     /** Publishing bumps the revision server-side; keep ours in step. */
     setRevision: (r: number) => {
       revision.current = r;

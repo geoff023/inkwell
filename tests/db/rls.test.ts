@@ -213,6 +213,29 @@ describe("likes, bookmarks and comments", () => {
   });
 });
 
+describe("writing history", () => {
+  it("only lets writing time grow, and no faster than the clock", async () => {
+    const id = await newEntry(alice, "timed");
+    await db.as(alice, "update public.entries set writing_seconds = 30 where id = $1", [id]);
+    await db.as(alice, "update public.entries set writing_seconds = 10 where id = $1", [id]);
+    await db.as(alice, "update public.entries set writing_seconds = 999999 where id = $1", [id]);
+    const [row] = await db.as<{ writing_seconds: number }>(alice, "select writing_seconds from public.entries where id = $1", [id]);
+    expect(row.writing_seconds).toBeGreaterThanOrEqual(30);
+    expect(row.writing_seconds).toBeLessThan(200);
+  });
+
+  it("keeps checkpoints private to the author", async () => {
+    const id = await newEntry(alice, "checkpointed");
+    await publish(alice, id);
+    const insert = "insert into public.entry_checkpoints (entry_id, kind, word_count, char_count, writing_seconds) values ($1, 'save', 1, 12, 0)";
+    await db.as(alice, insert, [id]);
+    await expect(db.as(bob, insert, [id])).rejects.toThrow(/row-level security/);
+    expect(await db.as(alice, "select * from public.entry_checkpoints where entry_id = $1", [id])).toHaveLength(1);
+    expect(await db.as(bob, "select * from public.entry_checkpoints where entry_id = $1", [id])).toHaveLength(0);
+    expect(await db.as(null, "select * from public.entry_checkpoints")).toHaveLength(0);
+  });
+});
+
 describe("follows and blocks", () => {
   it("prevent self-follows and duplicates", async () => {
     await expect(db.as(alice, "insert into public.follows (following_id) values ($1)", [alice])).rejects.toThrow(/follows_no_self/);

@@ -27,6 +27,7 @@ export default async function EditEntryPage({ params }: PageProps<"/write/[id]">
         isPublic: isPublic(entry),
         everPublished: entry.published_at !== null,
         tags: entry.tags.map((t) => t.name),
+        writingSeconds: entry.writing_seconds,
       }}
     />
   );

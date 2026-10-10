@@ -4,8 +4,10 @@ import { expect, test, type Page } from "@playwright/test";
 // Each run creates two fresh accounts with unique names.
 
 const run = Date.now().toString(36);
-const author = { name: "E2E Author", username: `author_${run}`, email: `author_${run}@example.test`, password: "correct horse battery" };
-const reader = { name: "E2E Reader", username: `reader_${run}`, email: `reader_${run}@example.test`, password: "correct horse battery" };
+// Hosted Supabase rejects reserved TLDs like .test; override if example.com is refused too.
+const domain = process.env.E2E_EMAIL_DOMAIN ?? "example.com";
+const author = { name: "E2E Author", username: `author_${run}`, email: `author_${run}@${domain}`, password: "correct horse battery" };
+const reader = { name: "E2E Reader", username: `reader_${run}`, email: `reader_${run}@${domain}`, password: "correct horse battery" };
 
 async function signUp(page: Page, user: typeof author) {
   await page.goto("/signup");

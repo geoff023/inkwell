@@ -48,6 +48,7 @@ export type Database = {
           visibility: Database["public"]["Enums"]["entry_visibility"];
           status: Database["public"]["Enums"]["entry_status"];
           revision: number;
+          writing_seconds: number;
           created_at: string;
           updated_at: string;
           published_at: string | null;
@@ -58,6 +59,7 @@ export type Database = {
           title?: string | null;
           content_json?: Json;
           content_text?: string;
+          writing_seconds?: number;
         };
         Update: {
           title?: string | null;
@@ -65,8 +67,33 @@ export type Database = {
           content_text?: string;
           visibility?: Database["public"]["Enums"]["entry_visibility"];
           status?: Database["public"]["Enums"]["entry_status"];
+          writing_seconds?: number;
         };
         Relationships: [Rel<"entries_author_id_fkey", "author_id", "profiles">];
+      };
+      entry_checkpoints: {
+        Row: {
+          id: string;
+          entry_id: string;
+          author_id: string;
+          kind: "save" | "publish" | "unpublish";
+          title: string | null;
+          word_count: number;
+          char_count: number;
+          writing_seconds: number;
+          created_at: string;
+        };
+        Insert: {
+          entry_id: string;
+          kind: "save" | "publish" | "unpublish";
+          title?: string | null;
+          word_count: number;
+          char_count: number;
+          writing_seconds: number;
+          author_id?: string;
+        };
+        Update: never;
+        Relationships: [Rel<"entry_checkpoints_entry_id_fkey", "entry_id", "entries">];
       };
       tags: {
         Row: { id: string; name: string; slug: string; created_at: string };

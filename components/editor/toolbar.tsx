@@ -4,14 +4,11 @@ import type { Editor } from "@tiptap/react";
 import { useEditorState } from "@tiptap/react";
 import {
   Bold,
-  Heading1,
-  Heading2,
   Italic,
   Link2,
   List,
   ListOrdered,
   Minus,
-  Pilcrow,
   Quote,
   Redo2,
   Strikethrough,
@@ -31,12 +28,18 @@ type Tool = {
   disabled?: (e: Editor) => boolean;
 };
 
+// Text styles map onto the stored schema: Title = heading 1, Subtitle =
+// heading 2 (rendered lighter and grey), Content = paragraph.
+const TEXT_STYLES = [
+  { value: "content", label: "Content", run: (e: Editor) => e.chain().focus().setParagraph().run() },
+  { value: "title", label: "Title", run: (e: Editor) => e.chain().focus().setHeading({ level: 1 }).run() },
+  { value: "subtitle", label: "Subtitle", run: (e: Editor) => e.chain().focus().setHeading({ level: 2 }).run() },
+] as const;
+
+const textStyleOf = (e: Editor) =>
+  e.isActive("heading", { level: 1 }) ? "title" : e.isActive("heading", { level: 2 }) ? "subtitle" : "content";
+
 const GROUPS: Tool[][] = [
-  [
-    { label: "Paragraph", icon: Pilcrow, run: (e) => e.chain().focus().setParagraph().run(), active: (e) => e.isActive("paragraph") },
-    { label: "Heading 1", icon: Heading1, run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(), active: (e) => e.isActive("heading", { level: 1 }) },
-    { label: "Heading 2", icon: Heading2, run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(), active: (e) => e.isActive("heading", { level: 2 }) },
-  ],
   [
     { label: "Bold", shortcut: "Ctrl+B", icon: Bold, run: (e) => e.chain().focus().toggleBold().run(), active: (e) => e.isActive("bold") },
     { label: "Italic", shortcut: "Ctrl+I", icon: Italic, run: (e) => e.chain().focus().toggleItalic().run(), active: (e) => e.isActive("italic") },
@@ -67,6 +70,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
       active: TOOLS.map((t) => t.active?.(e) ?? false),
       disabled: TOOLS.map((t) => t.disabled?.(e) ?? false),
       link: e.isActive("link"),
+      textStyle: textStyleOf(e),
       href: (e.getAttributes("link").href as string | undefined) ?? "",
     }),
   });
@@ -94,9 +98,24 @@ export function Toolbar({ editor }: { editor: Editor }) {
   return (
     <div className="border-b border-line bg-paper/95 backdrop-blur-sm">
       <div role="toolbar" aria-label="Formatting" className="mx-auto flex max-w-3xl items-center gap-0.5 overflow-x-auto px-2 py-1.5 [scrollbar-width:none] sm:px-4">
+        <label htmlFor="text-style" className="sr-only">
+          Text style
+        </label>
+        <select
+          id="text-style"
+          value={state.textStyle}
+          onChange={(e) => TEXT_STYLES.find((t) => t.value === e.target.value)?.run(editor)}
+          className="h-9 shrink-0 cursor-pointer rounded-md border border-line bg-white px-2 text-sm text-ink focus:border-taupe focus:outline-none"
+        >
+          {TEXT_STYLES.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
         {GROUPS.map((group, g) => (
           <div key={g} className="flex items-center gap-0.5">
-            {g > 0 && <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-line" />}
+            <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-line" />
             {group.map((tool) => {
               const i = index++;
               const Icon = tool.icon;
@@ -117,7 +136,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
                 </button>
               );
             })}
-            {g === 1 && (
+            {g === 0 && (
               <button
                 type="button"
                 title="Link"

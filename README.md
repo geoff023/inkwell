@@ -6,7 +6,8 @@ Inkwell is a private journal and a small literary community in one place. Write 
 
 ## Features
 
-- **Writing editor**: TipTap rich text (headings, bold, italic, underline, strikethrough, lists, quotes, links, dividers, undo/redo), optional titles, word count and reading time, preview, and autosave that only says "Saved" once the latest edit is stored.
+- **Writing editor**: TipTap rich text with Title / Subtitle / Content styles, bold, italic, underline, strikethrough, lists, quotes, links, dividers and undo/redo. Also optional titles, word count and reading time, preview, and autosave that only says "Saved" once the latest edit is stored. Chinese text is set in Noto Serif SC (Source Han Serif) to match the Lora serif.
+- **Save draft and history**: "Save draft" records a checkpoint. The History panel shows total writing time (only while you type; pauses over 30 seconds don't count) and, for each save, words added or removed and the time spent. Publishing and unpublishing are logged too.
 - **Private by default**: new entries are private drafts. Publishing is a separate, explicit step, and the database enforces it.
 - **Journal**: private entries and drafts grouped by day, with search and tag filters.
 - **Library**: everything you've written, filtered by status (draft, published, unpublished) and visibility, with search over titles, text and tags.
@@ -64,7 +65,7 @@ Copy the printed `API URL` and `anon key` into `.env.local`. Local auth has emai
    npx supabase link --project-ref <your-project-ref>
    npx supabase db push
    ```
-   or paste `supabase/migrations/20261010000000_init.sql` into the SQL editor and run it.
+   or paste each file in `supabase/migrations/` into the SQL editor and run them in filename order.
 3. In **Authentication → URL Configuration**, set **Site URL** to your app URL and add `<site-url>/auth/confirm` to the redirect URLs.
 4. Email confirmation is optional. If it's on, new users are asked to confirm before logging in.
 
